@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% block title %}
+Переход {{ page_from.name }} - {{ page_to.name }}
+{% endblock %}
+
+{% block content %}
+<h1>Переход <a href="{% url 'page' novel_id=novel.id page_id=page_from.id %}"> {{ page_from.name }} </a> - <a href="{% url 'page' novel_id=novel.id page_id=page_to.id %}"> {{ page_to.name }} </a></h1>
+<h3>Выбор <a href="{% url 'selection' novel_id=novel.id page_id=page_from.id selection_id=selection.id %}"> {{selection.text}} </a></h3>
+<div align="center">{{ transition.description }}</div>
+{% endblock %}

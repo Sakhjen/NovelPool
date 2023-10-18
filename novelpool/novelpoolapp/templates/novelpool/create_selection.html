@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+
+{% block title %}
+
+Создать выбор для страницы {{ page.name }}
+
+{% endblock %}
+
+{% block content %}
+
+<h1>Создать выбор для страницы {{ page.name }}</h1>
+
+<form method="POST">
+    {% csrf_token %}
+
+    {{ form.text }}<br>
+    <button type="submit" class="btn btn-success">Сохранить</button>
+</form>
+
+{% endblock %}

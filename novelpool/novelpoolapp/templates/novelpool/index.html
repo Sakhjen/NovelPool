@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% block title %}
+NovelPool
+{% endblock %}
+
+{% block content %}
+<h1>Доступные новеллы:</h1>
+<ul>
+{% for novel in novels %}
+    <li><h2><a href = "{% url 'novel' novel_id=novel.id %}">{{ novel.name }}</a></h2></li>
+    <p>{{ novel.description }}</p>
+{% endfor %}
+</ul>
+{% endblock %}

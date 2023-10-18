@@ -1,0 +1,9 @@
+{% extends 'base.html' %}
+{% block title %}
+Глава {{ chapter.name }}
+{% endblock %}
+
+{% block content %}
+<h1><a href = "{% url 'novel' novel_id=novel.id %}">{{ novel.name }}</a></h1>
+<h2>Глава {{chapter.name}}</h2>
+{% endblock %}

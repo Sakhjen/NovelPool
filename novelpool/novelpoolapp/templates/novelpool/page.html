@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Страница {{page.name}}
+{% endblock %}
+
+{% block content %}
+<h1>{{page.name}}</h1>
+<h3>{{page.chapter.name}}</h3>
+<div align="center">{{page.text}}</div>
+Доступные выборы:
+<ul>
+    {% for selection in page.selection_set.all %}
+        <li><a href="{% url 'selection' novel_id=novel.id page_id=page.id selection_id=selection.id %}">{{ selection.text }}</a></li>
+        <details>
+            <summary>Переход</summary>
+            {% for transition in selection.transition_set.all %}
+                <p><a href="{% url 'transition' novel_id=novel.id page_id=page.id transition_id=transition.id %}">{{ transition.description }}</a></p>
+            {% endfor %}
+        </details>
+    {% endfor %}
+</ul>
+<a href="{% url 'create_selection' novel_id=novel.id page_id=page.id %}">Создать выбор</a><br>
+<a href="{% url 'create_transition' novel_id=novel.id page_id=page.id %}">Создать переход</a>
+{% endblock %}

@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Создать главу к новелле {{novel.name}}
+{% endblock %}
+
+{% block content %}
+<h1>Создать главу к новелле {{novel.name}}</h1>
+
+<form method="POST">
+    {% csrf_token %}
+    {{ form.name }}
+    <button type="submit" class="btn btn-success">Сохранить</button>
+</form>
+{% endblock %}

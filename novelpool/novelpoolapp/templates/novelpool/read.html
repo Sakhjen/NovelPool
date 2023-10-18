@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+
+{% block title %}
+
+{{ page.novel.name }}
+
+{% endblock %}
+
+{% block content %}
+<h1>{{  page.novel.name }}</h1>
+<div>{{ page.chapter.name }}</div>
+<div>{{ page.text }}</div>
+
+<ul>
+    {% for select in selections %}
+    <li><a href="{% url 'read' novel_id=page.novel.id page_id=select.transition_set.first.page_to.id %}">{{ select.text }}</a></li>
+    {% endfor %}
+</ul>
+{% endblock %}

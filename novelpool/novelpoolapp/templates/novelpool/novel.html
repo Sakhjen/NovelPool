@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block title %}
+{{novel.name}}
+{% endblock %}
+{% block content %}
+<h1>{{novel.name}}</h1>
+{{novel.description}}
+<p><h3>Содержание:</h3></p>
+<ul>
+    {% for chapter in novel.chapter_set.all %}
+    <li>
+        <a href="{% url 'chapter' novel_id=novel.id chapter_id=chapter.id %}">{{ chapter.name }}</a>
+        <ul>
+            {% for page in chapter.page_set.all %}
+                <li>
+                    <a href="{% url 'page' novel_id=novel.id page_id=page.id %}">{{page.name}}</a>
+                </li>
+            {% endfor %}
+        </ul>
+    </li>
+    {% endfor %}
+</ul>
+{% if isOwner %}
+    <a href ="{% url 'create_chapter' novel_id=novel.id %}">Добавить главу</a><br>
+    <a href = "{% url 'create_page' novel_id=novel.id %}">Добавить страницу</a><br>
+{% endif %}
+
+{% if novel.getFirstPage.id %}
+    <a href = "{% url 'read' novel_id=novel.id page_id=novel.getFirstPage.id %}">Читать!</a>
+{% endif %}
+{% endblock %}

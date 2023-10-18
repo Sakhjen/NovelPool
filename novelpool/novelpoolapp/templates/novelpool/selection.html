@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Выбор для страницы {{ page.name }}
+{% endblock %}
+
+{% block content %}
+<h1>Выбор для страницы <a href="{% url 'page' novel_id=novel.id page_id=page.id %}">{{ page.name }}</a></h1>
+<div align="center">{{ selection.text }}</div>
+{% if selection.hasNoTransition %}
+    <a href="{% url 'create_transition_with_selection' novel_id=novel.id page_id=page.id selection_id=selection.id %}">Создать переход по этому выбору</a>
+{% endif %}
+{% endblock %}

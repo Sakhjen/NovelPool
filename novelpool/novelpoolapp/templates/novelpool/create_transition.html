@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    Создать переход со страницы {{ page.name }}
+{% endblock %}
+
+{% block content %}
+    <h1>Создать переход со страницы {{ page.name }}</h1>
+
+    {% if selection %}
+        <div class="alert alert-primary">Выбор '{{ selection.text }}'</div>
+    {% endif %}
+
+    <form method="POST">
+        {% csrf_token %}
+
+        {% if not selection %}
+            <div class="form-group">
+                <label for="{{ form.selection.id_for_label }}">{{ form.selection.label }}</label>
+                {{ form.selection }}<br>
+            </div>
+            
+        {% endif %}
+        
+        <div class="form-group">
+            <label for="{{ form.page_to.id_for_label }}">{{ form.page_to.label }}</label>
+            {{ form.page_to }}<br>
+        </div>
+        
+        <div class="form-group">
+            <label for="{{ form.description.id_for_label }}">{{ form.description.label }}</label>
+            {{ form.description }}<br>
+        </div>
+        
+        <button type="submit" class="btn btn-success">Сохранить</button>
+    </form>
+
+{% endblock %}
