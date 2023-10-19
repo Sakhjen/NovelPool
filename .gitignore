@@ -1,3 +1,5 @@
 /.vscode
 /venv
 /.env
+/todo.txt
+/.sqlite3
