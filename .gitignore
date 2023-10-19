@@ -3,3 +3,4 @@
 /.env
 /todo.txt
 /.sqlite3
+/.pyc
