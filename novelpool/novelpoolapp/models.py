@@ -17,9 +17,12 @@ class Novel(models.Model):
     def __str__(self):
         return self.name
     
-    def hasNoFirstPage(self):
+    def getFirstPage(self):
         first_page = self.page_set.filter(is_first=True).first()
-        return first_page.id > 0
+        return first_page
+    
+    def hasFirstPage(self):
+        return self.getFirstPage().id > 0
     
     class Meta:
         verbose_name = 'Новелла'

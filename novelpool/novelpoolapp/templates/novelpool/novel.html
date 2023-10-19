@@ -26,7 +26,7 @@
     <a href = "{% url 'create_page' novel_id=novel.id %}">Добавить страницу</a><br>
 {% endif %}
 
-{% if novel.getFirstPage.id %}
+{% if novel.hasFirstPage %}
     <a href = "{% url 'read' novel_id=novel.id page_id=novel.getFirstPage.id %}">Читать!</a>
 {% endif %}
 {% endblock %}
