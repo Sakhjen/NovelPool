@@ -1,5 +1,6 @@
 from .models import *
 from django.forms import ModelForm, TextInput, Textarea, ModelChoiceField, BooleanField, Select, CharField, PasswordInput,ValidationError
+#trying to push to dev branch
 
 class UserRegistrationForm(ModelForm):
     password = CharField(label='Пароль', widget=PasswordInput(attrs={
