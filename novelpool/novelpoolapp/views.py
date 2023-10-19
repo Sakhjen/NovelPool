@@ -1,10 +1,25 @@
 from django.shortcuts import render, redirect
 from django.http import HttpResponse, HttpResponseNotFound, HttpResponseForbidden
 from .models import *
-from.forms import NovelForm, ChapterForm, PageForm, SelectionForm, TransitionForm
+from.forms import NovelForm, ChapterForm, PageForm, SelectionForm, TransitionForm, UserRegistrationForm
 from django.contrib.auth.decorators import login_required
 
 # Create your views here.
+
+def register(request):
+    if request.method == 'POST':
+        user_form = UserRegistrationForm(request.POST)
+        if user_form.is_valid():
+            new_user = user_form.save(commit=False)
+            new_user.set_password(user_form.cleaned_data['password'])
+            new_user.save()
+            return render(request, 'registration/register_done.html', {'new_user': new_user})
+    
+    form = UserRegistrationForm()
+    context = {
+        'form':form
+    }
+    return render(request, 'registration/register.html', context)
 
 
 def index(request):

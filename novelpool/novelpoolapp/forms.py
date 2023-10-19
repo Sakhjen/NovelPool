@@ -1,5 +1,50 @@
 from .models import *
-from django.forms import ModelForm, TextInput, Textarea, ModelChoiceField, BooleanField, Select
+from django.forms import ModelForm, TextInput, Textarea, ModelChoiceField, BooleanField, Select, CharField, PasswordInput,ValidationError
+
+class UserRegistrationForm(ModelForm):
+    password = CharField(label='Пароль', widget=PasswordInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Пароль'
+            }))
+    password2 = CharField(label='Повторите пароль', widget=PasswordInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Повторите пароль'
+            }))
+
+
+    class Meta:
+        model = User
+        fields = [
+            'username', 
+            'first_name', 
+            'last_name',
+            'email',
+        ]
+        widgets = {
+            'username':TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Логин'
+            }),
+            'first_name':TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Имя'
+            }),
+            'last_name':TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Фамилия'
+            }),
+            'email':TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Адрес электронной почты'
+            }),
+        }
+
+    def clean_password2(self):
+        cd = self.cleaned_data
+        if cd['password'] != cd['password2']:
+            raise ValidationError('Пароли не совпадают.')
+        return cd['password2']
+
 
 class NovelForm(ModelForm):
     class Meta:

@@ -17,6 +17,7 @@
                 <li class="nav-item"><a href="{% url 'create_novel' %}" class="nav-link">Создать новеллу</a></li>
                 {% if not user.is_authenticated %}
                     <li class="nav-item"><a href="{% url 'login' %}"class="nav-link">Войти</a></li>
+                    <li class="nav-item"><a href="{% url 'register' %}"class="nav-link">Регистрация</a></li>
                 {% else %}
                     <li class="nav-item"><a href="{% url 'logout' %}?next=/"class="nav-link">Выход</a></li>
                 {% endif %}

@@ -17,5 +17,6 @@ urlpatterns = [
     path(r'create/<int:novel_id>/page/<int:page_id>/transition/', create_transition, name='create_transition'),
     path('novel/<int:novel_id>/page/<int:page_id>/transition/<int:transition_id>/', transition, name='transition'),
     path('accounts/', include('django.contrib.auth.urls')),
-    path('accounts/profile/', profile, name='profile')
+    path('accounts/profile/', profile, name='profile'),
+    path('register/', register, name='register')
 ]

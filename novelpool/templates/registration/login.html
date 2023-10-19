@@ -23,6 +23,6 @@
     <button type="submit" class="btn btn-success">Войти</button>
     <input type="hidden" name="next" value="{{ next }}" />
 </form>
-    
+    <p><a href="{% url 'register' %}">Зарегистрироваться</a></p>
     <p><a href="{% url 'password_reset' %}">Lost password?</a></p>
 {% endblock %}
