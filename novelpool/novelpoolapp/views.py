@@ -64,7 +64,7 @@ def novel(request, novel_id):
 def create_novel(request):
     if request.method == 'POST':
         data = request.POST.copy()
-        data['owner'] = request.user
+        data['owner'] = request.user.id
         form = NovelForm(data)
         if form.is_valid():
             novel = form.save()
@@ -120,16 +120,24 @@ def create_page(request, novel_id, chapter_id=None):
     if request.method == 'POST':
         data = request.POST.copy()
         data['novel'] = Novel.objects.filter(id=novel_id).first()
+        if not novel.hasFirstPage():
+            data['is_first'] = True
         form = PageForm(data)
-
+        
         if form.is_valid():
             page = form.save()
             return redirect('page', novel_id=novel_id, page_id=page.id)
     chapter = None
     if(chapter_id):
         chapter = Chapter.objects.filter(id=chapter_id).first()
-    form = PageForm()
+
+    if not novel.hasFirstPage():
+        form = PageForm(initial={'is_first':True})
+        form.fields['is_first'].disabled = True 
+    else:
+        form = PageForm()
     form.fields['chapter'].queryset = Chapter.getQuerySetByNovelId(novel_id)
+    
     context = {
         'novel':novel,
         'chapter':chapter,

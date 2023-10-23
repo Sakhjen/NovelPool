@@ -52,7 +52,8 @@ class NovelForm(ModelForm):
         model = Novel
         fields = [
             'name',
-            'description'
+            'description',
+            'owner'
         ]
         widgets = {
             'name': TextInput(attrs={

@@ -22,7 +22,7 @@ class Novel(models.Model):
         return first_page
     
     def hasFirstPage(self):
-        return self.getFirstPage().id > 0
+        return not self.getFirstPage() is None
     
     class Meta:
         verbose_name = 'Новелла'
