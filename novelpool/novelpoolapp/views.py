@@ -153,15 +153,18 @@ def page_edit_or_create(request, novel_id, chapter_id=None, page_id=None):
         data['novel'] = Novel.objects.filter(id=novel_id).first()
         if not novel.hasFirstPage() or (not page is None and page.is_first):
             data['is_first'] = True
+        if data['is_first']:
+            first_page = Page.objects.filter(novel=novel_id).filter(is_first=True).first()
+            if first_page:
+                first_page.is_first = False
+                first_page.save()
         form = PageForm(data, instance=page)
-        
         if form.is_valid():
             page = form.save()
             return redirect('page', novel_id=novel_id, page_id=page.id)
     chapter = None
     if(chapter_id):
         chapter = Chapter.objects.filter(id=chapter_id).first()
-
     if not novel.hasFirstPage() or (not page is None and page.is_first):
         form = PageForm(initial={'is_first':True}, instance=page)
         form.fields['is_first'].disabled = True 

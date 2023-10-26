@@ -8,6 +8,9 @@
 <h1>{{page.name}}</h1>
 <h3>{{page.chapter.name}}</h3>
 <div align="center">{{page.text}}</div>
+{% if page.is_first %}
+    Первая страница <br>
+{% endif %}
 Доступные выборы:
 <ul>
     {% for selection in page.selection_set.all %}
