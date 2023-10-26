@@ -1,14 +1,19 @@
 {% extends 'base.html' %}
 
 {% block title %}
-
-Создать выбор для страницы {{ page.name }}
-
+{% if selection %}
+    Редактировать выбор для страницы {{ page.name }}
+{% else %}
+    Создать выбор для страницы {{ page.name }}
+{% endif %}
 {% endblock %}
 
 {% block content %}
-
-<h1>Создать выбор для страницы {{ page.name }}</h1>
+{% if selection %}
+    <h1>Редактировать выбор для страницы <a href="{% url 'page' novel_id=novel.id page_id=page.id %}">{{ page.name }}</a></h1>
+{% else %}
+    <h1>Создать выбор для страницы <a href="{% url 'page' novel_id=novel.id page_id=page.id %}">{{ page.name }}</a></h1>
+{% endif %}
 
 <form method="POST">
     {% csrf_token %}

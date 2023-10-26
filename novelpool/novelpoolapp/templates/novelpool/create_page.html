@@ -5,7 +5,11 @@
 {% endblock %}
 
 {% block content %}
-<h1>Создать страницу</h1>
+{% if page %}
+    <h1>Редактировать страницу {{page.name}} новеллы <a href="{% url 'novel' novel_id=novel.id%}"></a></h1>
+{% else %}
+    <h1>Создать страницу для новеллы <a href="{% url 'novel' novel_id=novel.id%}"></a></h1>
+{% endif %}
 <form method="POST">
     {% csrf_token %}
 

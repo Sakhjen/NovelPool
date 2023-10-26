@@ -5,7 +5,11 @@
 {% endblock %}
 
 {% block content %}
-<h1>Создать главу к новелле {{novel.name}}</h1>
+{% if chapter %}
+    <h1>Редактировать главу {{ chapter.name }} новеллы <a href="{% url 'novel' novel_id=novel.id%}">{{ novel.name }}</a></h1>
+{% else %}
+    <h1>Создать главу к новелле <a href="{% url 'novel' novel_id=novel.id%}">{{ novel.name }}</a></h1>
+{% endif %}
 
 <form method="POST">
     {% csrf_token %}

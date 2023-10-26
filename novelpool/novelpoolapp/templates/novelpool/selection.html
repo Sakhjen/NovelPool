@@ -7,7 +7,9 @@
 {% block content %}
 <h1>Выбор для страницы <a href="{% url 'page' novel_id=novel.id page_id=page.id %}">{{ page.name }}</a></h1>
 <div align="center">{{ selection.text }}</div>
+<a href="{% url 'edit_selection' novel_id=novel.id page_id=page.id selection_id=selection.id %}">Редактировать</a><br>
 {% if selection.hasNoTransition %}
-    <a href="{% url 'create_transition_with_selection' novel_id=novel.id page_id=page.id selection_id=selection.id %}">Создать переход по этому выбору</a>
+    <a href="{% url 'create_transition_with_selection' novel_id=novel.id page_id=page.id selection_id=selection.id %}">Создать переход по этому выбору</a><br>
+    <a href ="{% url 'delete_selection' selection_id=selection.id %}">Удалить</a>
 {% endif %}
 {% endblock %}

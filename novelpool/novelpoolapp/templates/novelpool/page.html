@@ -20,6 +20,11 @@
         </details>
     {% endfor %}
 </ul>
-<a href="{% url 'create_selection' novel_id=novel.id page_id=page.id %}">Создать выбор</a><br>
-<a href="{% url 'create_transition' novel_id=novel.id page_id=page.id %}">Создать переход</a>
+{% if page.getOwner == user %}
+    <a href="{% url 'edit_page' novel_id=novel.id page_id=page.id %}">Редактировать</a><br>
+    <br>
+    <a href="{% url 'create_selection' novel_id=novel.id page_id=page.id %}">Создать выбор</a><br>
+    <a href="{% url 'create_transition' novel_id=novel.id page_id=page.id %}">Создать переход</a><br>
+    <a href ="{% url 'delete_page' page_id=page.id %}">Удалить</a>
+{% endif %}
 {% endblock %}

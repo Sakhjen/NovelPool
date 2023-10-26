@@ -3,7 +3,11 @@
     Создать новеллу
 {% endblock %}
 {% block content %}
-    <h1>Создать новеллу</h1>
+    {% if novel %}
+        <h1>Редактировать новеллу</h1>
+    {% else %}
+        <h1>Создать новеллу</h1>
+    {% endif %}
 
     <form method="post">
         {% csrf_token %}

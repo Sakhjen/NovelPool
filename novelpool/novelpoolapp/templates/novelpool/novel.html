@@ -22,11 +22,16 @@
     {% endfor %}
 </ul>
 {% if isOwner %}
-    <a href ="{% url 'create_chapter' novel_id=novel.id %}">Добавить главу</a><br>
+    <a href = "{% url 'edit_novel' novel_id=novel.id %}">Редактировать</a><br>
+    <a href = "{% url 'create_chapter' novel_id=novel.id %}">Добавить главу</a><br>
     <a href = "{% url 'create_page' novel_id=novel.id %}">Добавить страницу</a><br>
+    <a href = "{% url 'novel_delete' novel_id=novel.id %}" class = "delete_link">Удалить</a><!--TODO: сделать подтверждение удаления -->
 {% endif %}
 
 {% if novel.hasFirstPage %}
     <a href = "{% url 'read' novel_id=novel.id page_id=novel.getFirstPage.id %}">Читать!</a>
 {% endif %}
 {% endblock %}
+$(document).on('click', '.delete_link', function(){
+    return confirm('Вы уверены, что хотите удалить эту новеллу? {{ novel.name }}');
+})

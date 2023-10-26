@@ -7,4 +7,6 @@
 <h1>Переход <a href="{% url 'page' novel_id=novel.id page_id=page_from.id %}"> {{ page_from.name }} </a> - <a href="{% url 'page' novel_id=novel.id page_id=page_to.id %}"> {{ page_to.name }} </a></h1>
 <h3>Выбор <a href="{% url 'selection' novel_id=novel.id page_id=page_from.id selection_id=selection.id %}"> {{selection.text}} </a></h3>
 <div align="center">{{ transition.description }}</div>
+<a href="{% url 'edit_transition' novel_id=novel.id page_id=page_from.id transition_id=transition.id %}">Редактировать</a><br>
+<a href ="{% url 'delete_transition' transition_id=transition.id %}">Удалить</a>
 {% endblock %}
