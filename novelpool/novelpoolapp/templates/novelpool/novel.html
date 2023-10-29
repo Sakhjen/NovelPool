@@ -21,11 +21,11 @@
     </li>
     {% endfor %}
 </ul>
-{% if isOwner %}
+{% if novel.getOwner == user %}
     <a href = "{% url 'edit_novel' novel_id=novel.id %}">Редактировать</a><br>
     <a href = "{% url 'create_chapter' novel_id=novel.id %}">Добавить главу</a><br>
     <a href = "{% url 'create_page' novel_id=novel.id %}">Добавить страницу</a><br>
-    <a href = "{% url 'novel_delete' novel_id=novel.id %}" class = "delete_link">Удалить</a><!--TODO: сделать подтверждение удаления -->
+    <a href = "{% url 'novel_delete' novel_id=novel.id %}" class = "delete_link">Удалить</a><br><!--TODO: сделать подтверждение удаления -->
 {% endif %}
 
 {% if novel.hasFirstPage %}

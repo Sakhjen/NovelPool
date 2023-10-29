@@ -1,10 +1,17 @@
+from typing import Any
+
 from django.shortcuts import render, redirect, get_object_or_404
-from django.http import HttpResponse, HttpResponseNotFound, HttpResponseForbidden
+from django.http import HttpResponseNotFound, HttpResponseForbidden
 from .models import *
-from.forms import NovelForm, ChapterForm, PageForm, SelectionForm, TransitionForm, UserRegistrationForm
+from .forms import NovelForm, ChapterForm, PageForm, SelectionForm, TransitionForm, UserRegistrationForm
 from django.contrib.auth.decorators import login_required
+from django.views.generic import ListView, DetailView
+from django.views.generic.edit import FormView
+from django.core.exceptions import PermissionDenied
 
 # Create your views here.
+
+
 
 def register(request):
     if request.method == 'POST':
@@ -22,13 +29,13 @@ def register(request):
     return render(request, 'registration/register.html', context)
 
 
-def index(request):
-    novels = Novel.objects.all()
-    context={
-        'novels':novels,
-        'user':request.user
-    }
-    return render(request, 'novelpool/index.html', context)
+class IndexView(ListView):
+    model = Novel
+    template_name = 'novelpool/index.html'
+    context_object_name = 'novels'
+
+    # def get_queryset(self) -> QuerySet[Any]:
+    #     return Novel.objects.filter(status=2)
 
 
 def tutorial(request):
@@ -48,16 +55,36 @@ def read(request, novel_id, page_id):
     return HttpResponseNotFound()
 
 
-@login_required
-def novel(request, novel_id):
-    novel = Novel.objects.filter(id=novel_id).first()
-    user = request.user
-    isOwner = novel.getOwner() == user
-    context = {
-        'novel':novel,
-        'isOwner':isOwner
-    }
-    return render(request, 'novelpool/novel.html', context=context)
+class NovelView(DetailView):
+    model = Novel
+    template_name = 'novelpool/novel.html'
+    context_object_name = 'novel'
+
+    def get_object(self, queryset=None):
+        return get_object_or_404(Novel, id=self.kwargs['novel_id'])
+
+
+class NovelEditCreateView(FormView):
+    form_class = NovelForm
+    template_name = 'novelpool/create_novel.html'
+    success_url = 'novel'
+    
+    def form_valid(self, form):
+        form.cleaned_data['owner'] = self.request.user
+        return super().form_valid(form)
+    
+    def get_context_data(self, **kwargs):
+        novel = None
+        context = super().get_context_data(**kwargs)
+        if 'novel_id' in self.kwargs:
+            novel = get_object_or_404(Novel, id=self.kwargs['novel_id'])
+            context['form'].instance = novel
+            if self.request.user != novel.getOwner():
+                raise PermissionDenied()
+        context['novel'] = novel
+        return context
+    
+
 
 
 @login_required
@@ -116,18 +143,22 @@ def chapter_edit_or_create(request, novel_id, chapter_id=None):
     }
     return render(request, 'novelpool/create_chapter.html', context)
         
+
+class ChapterView(DetailView):
+    model=Chapter
+    template_name = 'novelpool/chapter.html'
+    context_object_name = 'chapter'
+
+    def get_object(self):
+        chapter = get_object_or_404(Chapter, novel__id = self.kwargs['novel_id'], id=self.kwargs['chapter_id'])
+        if self.request.user != chapter.getOwner():
+            raise PermissionDenied()
+        return chapter
     
-@login_required
-def chapter(request, novel_id, chapter_id):
-    novel = Novel.objects.filter(id=novel_id).first()
-    chapter = Chapter.objects.filter(id=chapter_id).first()
-    if request.user != chapter.getOwner():
-        return HttpResponseForbidden()
-    context = {
-        'novel':novel,
-        'chapter':chapter
-    }
-    return render(request, 'novelpool/chapter.html', context)
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['novel'] = context['chapter'].novel
+        return context
 
 
 @login_required
@@ -181,17 +212,21 @@ def page_edit_or_create(request, novel_id, chapter_id=None, page_id=None):
     return render(request, 'novelpool/create_page.html', context)
 
 
-@login_required
-def page(request, novel_id, page_id):
-    novel = Novel.objects.filter(id=novel_id).first()
-    page = Page.objects.filter(id=page_id).first()
-    if request.user != page.getOwner():
-        return HttpResponseForbidden()
-    context = {
-        'novel': novel,
-        'page': page
-    }
-    return render(request, 'novelpool/page.html', context)
+class PageView(DetailView):
+    model=Page
+    template_name = 'novelpool/page.html'
+    context_object_name = 'page'
+
+    def get_object(self):
+        page = get_object_or_404(Page, novel__id = self.kwargs['novel_id'], id=self.kwargs['page_id'])
+        if self.request.user != page.getOwner():
+            raise PermissionDenied()
+        return page
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['novel'] = context['page'].novel
+        return context
 
 
 @login_required
@@ -229,19 +264,22 @@ def selection_edit_or_create(request, novel_id, page_id, selection_id=None):
     return render(request, 'novelpool/create_selection.html', context)
 
 
-@login_required
-def selection(request, novel_id, page_id, selection_id):
-    novel = Novel.objects.filter(id=novel_id).first()
-    page = Page.objects.filter(id=page_id).first()
-    selection = Selection.objects.filter(id=selection_id).first()
-    if request.user != selection.getOwner():
-        return HttpResponseForbidden()
-    context = {
-        'novel':novel,
-        'page':page,
-        'selection':selection
-    }
-    return render(request, 'novelpool/selection.html', context)
+class SelectionView(DetailView):
+    model=Selection
+    template_name = 'novelpool/selection.html'
+    context_object_name = 'selection'
+
+    def get_object(self):
+        selection = get_object_or_404(Selection, page__novel__id = self.kwargs['novel_id'], page__id=self.kwargs['page_id'], id=self.kwargs['selection_id'])
+        if self.request.user != selection.getOwner():
+            raise PermissionDenied()
+        return selection
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['novel'] = context['selection'].page.novel
+        context['page'] = context['selection'].page
+        return context
 
 
 @login_required
@@ -288,22 +326,24 @@ def transition_edit_or_create(request, novel_id, page_id, selection_id=None, tra
     return render(request, 'novelpool/create_transition.html', context)
 
 
-@login_required
-def transition(request, novel_id, page_id, transition_id):
-    novel = Novel.objects.filter(id=novel_id).first()
-    page_from = Page.objects.filter(id=page_id).first()
-    transition = Transition.objects.filter(id=transition_id).first()
-    if request.user != transition.getOwner():
-        return HttpResponseForbidden()
-    page_to = Page.objects.filter(id=transition.page_to.id).first()
-    context = {
-        'novel':novel,
-        'transition':transition,
-        'page_from':page_from,
-        'page_to':page_to,
-        'selection':transition.selection
-    }
-    return render(request, 'novelpool/transition.html', context)
+class TransitionView(DetailView):
+    model=Transition
+    template_name = 'novelpool/transition.html'
+    context_object_name = 'transition'
+
+    def get_object(self):
+        transition = get_object_or_404(Transition, page_from__novel__id = self.kwargs['novel_id'], page_from__id=self.kwargs['page_id'], id=self.kwargs['transition_id'])
+        if self.request.user != transition.getOwner():
+            raise PermissionDenied()
+        return transition
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['novel'] = context['transition'].page_from.novel
+        context['page_from'] = context['transition'].page_from
+        context['page_to'] = context['transition'].page_to
+        context['selection'] = context['transition'].selection
+        return context
 
 
 @login_required
@@ -315,12 +355,15 @@ def transition_delete(request, transition_id):
     return redirect('selection', novel_id=transition.selection.page.chapter.novel.id, page_id=transition.selection.page.id, selection_id=transition.selection.id)
 
 
-@login_required
-def profile(request):
-    user = request.user
-    novels = Novel.objects.filter(owner=user).all()
-    context = {
-        'user':user,
-        'novels':novels
-    }
-    return render(request, 'novelpool/profile.html', context)
+class ProfileView(DetailView):
+    model=User
+    template_name = 'novelpool/profile.html'
+    context_object_name = 'user'
+
+    def get_object(self):
+        return self.request.user
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['novels'] = Novel.objects.filter(owner=self.request.user).all()
+        return context
