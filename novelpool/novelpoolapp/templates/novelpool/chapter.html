@@ -8,8 +8,8 @@
 <h2>Глава {{chapter.name}}</h2>
 
 {% if user == chapter.getOwner %}
-    <a href = "{% url 'edit_chapter' novel_id=novel.id chapter_id=chapter.id%}">Редактировать</a><br>
-    <a href = "{% url 'create_page' novel_id=novel.id %}">Добавить страницу</a><br>
+    <a href = "{% url 'edit_chapter' novel_id=novel.id chapter_id=chapter.id %}">Редактировать</a><br>
+    <a href = "{% url 'create_page_with_chapter' novel_id=novel.id chapter_id=chapter.id %}">Добавить страницу</a><br>
     <a href = "{% url 'delete_chapter' chapter_id=chapter.id %}">Удалить</a>
 {% endif %}
 {% endblock %}

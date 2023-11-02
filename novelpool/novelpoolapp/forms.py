@@ -53,7 +53,7 @@ class NovelForm(ModelForm):
         fields = [
             'name',
             'description',
-            'owner'
+#            'owner'
         ]
         widgets = {
             'name': TextInput(attrs={
@@ -72,8 +72,7 @@ class ChapterForm(ModelForm):
     class Meta:
         model = Chapter
         fields = [
-            'name',
-            'novel'
+            'name'
         ]
         widgets = {
             'name': TextInput(attrs={
@@ -92,7 +91,6 @@ class PageForm(ModelForm):
             'name',
             'text',
             'chapter',
-            'novel',
             'is_first'
         ]
         widgets = {
@@ -110,8 +108,7 @@ class SelectionForm(ModelForm):
     class Meta:
         model = Selection
         fields = [
-            'text',
-            'page'
+            'text'
         ]
         widgets = {
             'text': TextInput(attrs = {

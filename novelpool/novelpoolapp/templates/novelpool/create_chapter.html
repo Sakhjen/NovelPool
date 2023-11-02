@@ -11,6 +11,12 @@
     <h1>Создать главу к новелле <a href="{% url 'novel' novel_id=novel.id%}">{{ novel.name }}</a></h1>
 {% endif %}
 
+{% if form.errors %}
+    <div class="alert alert-danger">
+        {{ form.errors }}
+    </div>
+{% endif %}
+
 <form method="POST">
     {% csrf_token %}
     {{ form.name }}

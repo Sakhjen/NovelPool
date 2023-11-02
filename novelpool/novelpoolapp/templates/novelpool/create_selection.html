@@ -14,6 +14,12 @@
 {% else %}
     <h1>Создать выбор для страницы <a href="{% url 'page' novel_id=novel.id page_id=page.id %}">{{ page.name }}</a></h1>
 {% endif %}
+{% if form.errors %}
+    <div class="alert alert-danger">
+        {{ form.errors }}
+    </div>
+{% endif %}
+
 
 <form method="POST">
     {% csrf_token %}

@@ -10,6 +10,11 @@
 {% else %}
     <h1>Создать страницу для новеллы <a href="{% url 'novel' novel_id=novel.id%}"></a></h1>
 {% endif %}
+{% if form.errors %}
+    <div class="alert alert-danger">
+        {{ form.errors }}
+    </div>
+{% endif %}
 <form method="POST">
     {% csrf_token %}
 

@@ -1,6 +1,8 @@
 from django.db import models
 from enum import Enum
 from django.contrib.auth.models import User
+from django.urls import reverse
+from django.core.exceptions import PermissionDenied
 
 
 class NovelStatus(Enum):
@@ -30,6 +32,13 @@ class Novel(models.Model):
 
     def getOwner(self):
         return self.owner
+    
+    def validateUser(self, user):
+        if self.getOwner() != user:
+            raise PermissionDenied()
+    
+    def get_absolute_url(self):
+        return reverse('novel', kwargs={'novel_id':self.id})
 
 
 class Chapter(models.Model):
@@ -49,6 +58,13 @@ class Chapter(models.Model):
     
     def getOwner(self):
         return self.novel.getOwner()
+    
+    def validateUser(self, user):
+        if self.getOwner() != user:
+            raise PermissionDenied()
+    
+    def get_absolute_url(self):
+        return reverse('chapter', kwargs={'novel_id':self.novel.id, 'chapter_id':self.id})
 
 
 class Page(models.Model):
@@ -67,6 +83,13 @@ class Page(models.Model):
 
     def getOwner(self):
         return self.novel.getOwner()
+    
+    def validateUser(self, user):
+        if self.getOwner() != user:
+            raise PermissionDenied()
+    
+    def get_absolute_url(self):
+        return reverse('page', kwargs={'novel_id':self.novel.id, 'page_id':self.id})
 
 
 class Selection(models.Model):
@@ -83,11 +106,16 @@ class Selection(models.Model):
     def getOwner(self):
         return self.page.getOwner()
     
+    def validateUser(self, user):
+        if self.getOwner() != user:
+            raise PermissionDenied()
+    
+    def get_absolute_url(self):
+        return reverse('selection', kwargs={'novel_id':self.page.novel.id, 'page_id':self.page.id, 'selection_id':self.id})
+    
     class Meta:
         verbose_name = 'Вариант ответа'
         verbose_name_plural = 'Варианты ответов'
-
-    
 
 
 class Transition(models.Model):
@@ -105,3 +133,7 @@ class Transition(models.Model):
 
     def getOwner(self):
         return self.page_from.getOwner()
+    
+    def validateUser(self, user):
+        if self.getOwner() != user:
+            raise PermissionDenied()

@@ -1,14 +1,14 @@
 from typing import Any
 
 from django.shortcuts import render, redirect, get_object_or_404
-from django.http import HttpResponseNotFound, HttpResponseForbidden
+from django.http import HttpResponseNotFound, HttpResponseForbidden, HttpResponseRedirect
 from .models import *
 from .forms import NovelForm, ChapterForm, PageForm, SelectionForm, TransitionForm, UserRegistrationForm
 from django.contrib.auth.decorators import login_required
 from django.views.generic import ListView, DetailView
-from django.views.generic.edit import FormView
+from django.views.generic.edit import FormView, CreateView, UpdateView
 from django.core.exceptions import PermissionDenied
-
+from django.urls import reverse_lazy
 # Create your views here.
 
 
@@ -21,7 +21,6 @@ def register(request):
             new_user.set_password(user_form.cleaned_data['password'])
             new_user.save()
             return render(request, 'registration/register_done.html', {'new_user': new_user})
-    
     form = UserRegistrationForm()
     context = {
         'form':form
@@ -33,9 +32,6 @@ class IndexView(ListView):
     model = Novel
     template_name = 'novelpool/index.html'
     context_object_name = 'novels'
-
-    # def get_queryset(self) -> QuerySet[Any]:
-    #     return Novel.objects.filter(status=2)
 
 
 def tutorial(request):
@@ -64,85 +60,37 @@ class NovelView(DetailView):
         return get_object_or_404(Novel, id=self.kwargs['novel_id'])
 
 
-class NovelEditCreateView(FormView):
+class NovelCreateView(CreateView):
     form_class = NovelForm
     template_name = 'novelpool/create_novel.html'
-    success_url = 'novel'
+    context_object_name = 'novel'
     
     def form_valid(self, form):
-        form.cleaned_data['owner'] = self.request.user
-        return super().form_valid(form)
-    
-    def get_context_data(self, **kwargs):
-        novel = None
-        context = super().get_context_data(**kwargs)
-        if 'novel_id' in self.kwargs:
-            novel = get_object_or_404(Novel, id=self.kwargs['novel_id'])
-            context['form'].instance = novel
-            if self.request.user != novel.getOwner():
-                raise PermissionDenied()
-        context['novel'] = novel
-        return context
+        self.object = form.save(commit=False)
+        self.object.owner = self.request.user
+        self.object.save()
+        return HttpResponseRedirect(self.get_success_url())
     
 
+class NovelEditView(UpdateView):
+    form_class = NovelForm
+    template_name = 'novelpool/create_novel.html'
+    context_object_name = 'novel'
 
+    def get_object(self, queryset=None):
+        novel = get_object_or_404(Novel, id=self.kwargs['novel_id'])
+        novel.validateUser(self.request.user)
+        return novel
 
-@login_required
-def novel_edit_or_create(request, novel_id = None):
-    novel = None
-    if novel_id:
-        novel = get_object_or_404(Novel, id=novel_id)
-        if request.user != novel.getOwner():
-            return HttpResponseForbidden()
-    if request.method == 'POST':
-        data = request.POST.copy()
-        data['owner'] = request.user.id
-        form = NovelForm(data, instance=novel)
-        if form.is_valid():
-            novel = form.save()
-            return redirect('novel', novel_id=novel.id)
-    form = NovelForm(instance=novel)
-
-    context = {
-        'form':form,
-        'novel':novel
-    }
-    return render(request, 'novelpool/create_novel.html', context)
 
 @login_required
 def novel_delete(request, novel_id):
     novel = get_object_or_404(Novel, id=novel_id)
-    if request.user != novel.getOwner():
-        return HttpResponseForbidden()
+    novel.validateUser(request.user)
     
     novel.delete()
     return redirect('index')
 
-
-@login_required
-def chapter_edit_or_create(request, novel_id, chapter_id=None):
-    chapter = None
-    novel = get_object_or_404(Novel, id=novel_id)
-    if request.user != novel.getOwner():
-            return HttpResponseForbidden()
-    if chapter_id:
-        chapter = get_object_or_404(Chapter, id=chapter_id)
-        
-    if request.method == 'POST':
-        data = request.POST.copy()
-        data['novel'] = Novel.objects.filter(id=novel_id).first()
-        form = ChapterForm(data, instance=chapter)
-        if form.is_valid():
-            chapter = form.save()
-            return redirect('chapter', novel_id=novel_id, chapter_id=chapter.id)
-    form = ChapterForm(instance=chapter)
-    context = {
-        'form':form,
-        'novel':novel,
-        'chapter':chapter
-    }
-    return render(request, 'novelpool/create_chapter.html', context)
-        
 
 class ChapterView(DetailView):
     model=Chapter
@@ -151,13 +99,56 @@ class ChapterView(DetailView):
 
     def get_object(self):
         chapter = get_object_or_404(Chapter, novel__id = self.kwargs['novel_id'], id=self.kwargs['chapter_id'])
-        if self.request.user != chapter.getOwner():
-            raise PermissionDenied()
+        chapter.validateUser(self.request.user)
         return chapter
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['novel'] = context['chapter'].novel
+        return context
+    
+
+class ChapterCreateView(CreateView):
+    form_class = ChapterForm
+    template_name = 'novelpool/create_chapter.html'
+    context_object_name = 'chapter'
+    novel = None
+
+    def get(self, request, *args, **kwargs):
+        self.novel = get_object_or_404(Novel, id=self.kwargs['novel_id'])
+        self.novel.validateUser(self.request.user)
+        return super().get(request, *args, **kwargs)
+    
+    def post(self, request, *args, **kwargs):
+        self.novel = get_object_or_404(Novel, id=self.kwargs['novel_id'])
+        self.novel.validateUser(self.request.user)
+        return super().post(request, *args, **kwargs)
+
+    def form_valid(self, form):
+        self.object = form.save(commit=False)
+        self.object.novel = self.novel
+        self.object.save()
+        return HttpResponseRedirect(self.get_success_url())
+    
+    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
+        context = super().get_context_data(**kwargs)
+        context['novel'] = self.novel
+        return context
+    
+
+class ChapterEditView(UpdateView):
+    form_class = ChapterForm
+    template_name = 'novelpool/create_chapter.html'
+    context_object_name = 'chapter'
+
+    def get_object(self, queryset=None):
+        chapter = get_object_or_404(Chapter, id=self.kwargs['chapter_id'], novel__id=self.kwargs['novel_id'])
+        chapter.validateUser(self.request.user)
+        return chapter
+    
+    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
+        context = super().get_context_data(**kwargs)
+        context['novel'] = get_object_or_404(Novel, id=self.kwargs['novel_id'])
         return context
 
 
@@ -165,51 +156,9 @@ class ChapterView(DetailView):
 def chapter_delete(request, chapter_id):
     chapter = get_object_or_404(Chapter, id=chapter_id)
     novel = chapter.novel
-    if request.user != chapter.getOwner():
-        return HttpResponseForbidden()
+    chapter.validateUser(request.user)
     chapter.delete()
     return redirect('novel', novel_id=novel.id)
-
-
-@login_required
-def page_edit_or_create(request, novel_id, chapter_id=None, page_id=None):
-    page = None
-    novel = get_object_or_404(Novel, id=novel_id)
-    if page_id:
-        page = get_object_or_404(Page, id=page_id)
-    if request.user != novel.getOwner():
-        return HttpResponseForbidden()
-    if request.method == 'POST':
-        data = request.POST.copy()
-        data['novel'] = Novel.objects.filter(id=novel_id).first()
-        if not novel.hasFirstPage() or (not page is None and page.is_first):
-            data['is_first'] = True
-        if data['is_first']:
-            first_page = Page.objects.filter(novel=novel_id).filter(is_first=True).first()
-            if first_page:
-                first_page.is_first = False
-                first_page.save()
-        form = PageForm(data, instance=page)
-        if form.is_valid():
-            page = form.save()
-            return redirect('page', novel_id=novel_id, page_id=page.id)
-    chapter = None
-    if(chapter_id):
-        chapter = Chapter.objects.filter(id=chapter_id).first()
-    if not novel.hasFirstPage() or (not page is None and page.is_first):
-        form = PageForm(initial={'is_first':True}, instance=page)
-        form.fields['is_first'].disabled = True 
-    else:
-        form = PageForm(instance=page)
-    form.fields['chapter'].queryset = Chapter.getQuerySetByNovelId(novel_id)
-    
-    context = {
-        'novel':novel,
-        'chapter':chapter,
-        'page':page,
-        'form':form
-    }
-    return render(request, 'novelpool/create_page.html', context)
 
 
 class PageView(DetailView):
@@ -219,49 +168,147 @@ class PageView(DetailView):
 
     def get_object(self):
         page = get_object_or_404(Page, novel__id = self.kwargs['novel_id'], id=self.kwargs['page_id'])
-        if self.request.user != page.getOwner():
-            raise PermissionDenied()
+        page.validateUser(self.request.user)
         return page
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['novel'] = context['page'].novel
         return context
+    
+
+class PageCreateView(CreateView):
+    form_class = PageForm
+    template_name = 'novelpool/create_page.html'
+    context_object_name = 'page'
+    novel = None
+    chapter = None
+
+    def get(self, request, *args, **kwargs):
+        self.novel = get_object_or_404(Novel, id=self.kwargs['novel_id'])
+        self.novel.validateUser(self.request.user)
+        if('chapter_id' in self.kwargs):
+            self.chapter = get_object_or_404(Chapter, id=self.kwargs['chapter_id'], novel__id=self.novel.id)
+        return super().get(request, *args, **kwargs)
+    
+    def post(self, request, *args, **kwargs):
+        self.novel = get_object_or_404(Novel, id=self.kwargs['novel_id'])
+        self.novel.validateUser(self.request.user)
+        return super().post(request, *args, **kwargs)
+
+    def form_valid(self, form):
+        self.object = form.save(commit=False)
+        self.object.novel = self.novel
+        if not self.novel.hasFirstPage():
+            self.object.is_first = True
+        if self.object.is_first:
+            first_page = Page.objects.filter(novel=self.kwargs['novel_id']).filter(is_first=True).first()
+            if first_page:
+                first_page.is_first = False
+                first_page.save()
+        if self.chapter:
+            self.object.chapter = self.chapter
+        self.object.save()
+        return HttpResponseRedirect(self.get_success_url())
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['novel'] = self.novel
+        context['form'].fields['chapter'].queryset = Chapter.getQuerySetByNovelId(self.kwargs['novel_id'])
+        context['chapter'] = self.chapter
+        if not self.novel.hasFirstPage():
+            context['form'].fields['is_first'].disabled = True 
+        return context
+    
+    def get_initial(self, *args, **kwargs):
+        initial = super(PageCreateView, self).get_initial(**kwargs)
+        if not self.novel.hasFirstPage():
+            initial['is_first'] = True
+        if self.chapter:
+            initial['chapter'] = self.chapter
+        return initial
+    
+
+class PageEditView(UpdateView):
+    form_class = PageForm
+    template_name = 'novelpool/create_page.html'
+    context_object_name = 'page'
+
+    def get_object(self, queryset=None):
+        page = get_object_or_404(Page, id=self.kwargs['page_id'], novel__id=self.kwargs['novel_id'])
+        page.validateUser(self.request.user)
+        return page
+    
+    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
+        context = super().get_context_data(**kwargs)
+        context['novel'] = get_object_or_404(Novel, id=self.kwargs['novel_id'])
+        if self.get_object().is_first:
+            context['form'].fields['is_first'].disabled = True 
+        return context
+    
+    def form_valid(self, form):
+        self.object = form.save(commit=False)
+        if self.object.is_first:
+            first_page = Page.objects.filter(novel=self.kwargs['novel_id']).filter(is_first=True).first()
+            if first_page:
+                first_page.is_first = False
+                first_page.save()
+        self.object.save()
+        return super(PageEditView,self).form_valid(form)
 
 
 @login_required
 def page_delete(request, page_id):
     page = get_object_or_404(Page, id=page_id)
-    if request.user != page.getOwner():
-        return HttpResponseForbidden()
+    page.validateUser(request.user)
     page.delete()
     return redirect('chapter', novel_id=page.chapter.novel.id, chapter_id=page.chapter.id)
 
 
-@login_required
-def selection_edit_or_create(request, novel_id, page_id, selection_id=None):
-    selection = None
-    novel = get_object_or_404(Novel, id=novel_id)
-    if selection_id:
-        selection = get_object_or_404(Selection, id=selection_id)
-    page = get_object_or_404(Page, id=page_id)
-    if request.user != page.getOwner():
-        return HttpResponseForbidden()
-    if request.method == 'POST':
-        data = request.POST.copy()
-        data['page'] = page
-        form = SelectionForm(data, instance=selection)
-        if form.is_valid():
-            selection = form.save()
-            return redirect('selection', novel_id=novel_id, page_id=page_id, selection_id=selection.id)
-    form = SelectionForm(instance=selection)
-    context = {
-        'novel': novel,
-        'page': page,
-        'selection':selection,
-        'form': form
-    }
-    return render(request, 'novelpool/create_selection.html', context)
+class SelectionCreateView(CreateView):
+    form_class = SelectionForm
+    template_name = 'novelpool/create_selection.html'
+    context_object_name = 'selection'
+    page = None
+        
+    def get(self, request, *args, **kwargs):
+        self.page = get_object_or_404(Page, novel__id=self.kwargs['novel_id'], id=self.kwargs['page_id'])
+        self.page.validateUser(self.request.user)
+        return super().get(request, *args, **kwargs)
+    
+    def post(self, request, *args, **kwargs):
+        self.page = get_object_or_404(Page, novel__id=self.kwargs['novel_id'], id=self.kwargs['page_id'])
+        self.page.validateUser(self.request.user)
+        return super().post(request, *args, **kwargs)
+    
+    def form_valid(self, form):
+        self.object = form.save(commit=False)
+        self.object.page = self.page
+        self.object.save()
+        return HttpResponseRedirect(self.get_success_url())
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['novel'] = self.page.novel
+        context['page'] = self.page
+        return context
+    
+
+class SelectionEditView(UpdateView):
+    form_class = SelectionForm
+    template_name = 'novelpool/create_selection.html'
+    context_object_name = 'selection'
+
+    def get_object(self, queryset=None):
+        selection = get_object_or_404(Selection, id=self.kwargs['selection_id'], page__novel__id=self.kwargs['novel_id'], page_id=self.kwargs['page_id'])
+        selection.validateUser(self.request.user)
+        return selection
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['novel'] = self.get_object().page.novel
+        context['page'] = self.get_object().page
+        return context
 
 
 class SelectionView(DetailView):
