@@ -137,3 +137,6 @@ class Transition(models.Model):
     def validateUser(self, user):
         if self.getOwner() != user:
             raise PermissionDenied()
+        
+    def get_absolute_url(self):
+        return reverse('transition', kwargs={'novel_id':self.page_from.novel.id, 'page_id':self.page_from.id, 'transition_id':self.id})

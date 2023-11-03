@@ -338,6 +338,54 @@ def selection_delete(request, selection_id):
     return redirect('page', novel_id=selection.page.chapter.novel.id, page_id=selection.page.id)
 
 
+class TransitionCreateView(CreateView):
+    form_class = TransitionForm
+    template_name = 'novelpool/create_transition.html'
+    context_object_name = 'transition'
+    page_from = None
+    selection = None
+    
+    def get(self, request, *args, **kwargs):
+        self.page_from = get_object_or_404(Page, novel__id=self.kwargs['novel_id'], id=self.kwargs['page_id'])
+        self.page_from.validateUser(self.request.user)
+        if('selection_id' in self.kwargs):
+            self.selection = get_object_or_404(Selection, id=self.kwargs['selection_id'], page__novel__id=self.page_from.novel.id, page=self.page_from)
+        return super().get(request, *args, **kwargs)
+    
+    def post(self, request, *args, **kwargs):
+        self.page_from = get_object_or_404(Page, novel__id=self.kwargs['novel_id'], id=self.kwargs['page_id'])
+        self.page_from.validateUser(self.request.user)
+        if('selection_id' in self.kwargs):
+            self.selection = get_object_or_404(Selection, id=self.kwargs['selection_id'], page__novel__id=self.page_from.novel.id, page=self.page_from)
+            data = request.POST.copy()
+            data['selection'] = self.selection
+            request.POST = data.copy()
+        return super().post(request, *args, **kwargs)
+    
+    def form_valid(self, form):
+        self.object = form.save(commit=False)
+        if self.selection:
+            self.object.selection = self.selection
+        self.object.page_from = self.page_from
+        self.object.save()
+        return HttpResponseRedirect(self.get_success_url())
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['form'].fields['page_to'].queryset = Page.objects.filter(novel=self.page_from.novel).exclude(id=self.page_from.id).all()
+        context['form'].fields['selection'].queryset = Selection.objects.filter(page=self.page_from).all()
+        if self.selection:
+            context['form'].fields['selection'].disabled = True 
+            context['form'].fields['selection'].required = False
+        return context
+    
+    def get_initial(self, *args, **kwargs):
+        initial = super(TransitionCreateView, self).get_initial(**kwargs)
+        if self.selection:
+            initial['selection'] = self.selection
+        return initial
+
+
 @login_required
 def transition_edit_or_create(request, novel_id, page_id, selection_id=None, transition_id=None):
     transition = None

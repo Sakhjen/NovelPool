@@ -121,7 +121,6 @@ class TransitionForm(ModelForm):
     class Meta:
         model = Transition
         fields = [
-            'page_from',
             'page_to',
             'selection',
             'description'

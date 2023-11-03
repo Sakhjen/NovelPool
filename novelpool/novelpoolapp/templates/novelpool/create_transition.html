@@ -7,6 +7,11 @@
 {% block content %}
     <h1>Создать переход со страницы {{ page.name }}</h1>
 
+    {% if form.errors %}
+        <div class="alert alert-danger">
+            {{ form.errors }}
+        </div>
+    {% endif %}
     {% if selection %}
         <div class="alert alert-primary">Выбор '{{ selection.text }}'</div>
     {% endif %}

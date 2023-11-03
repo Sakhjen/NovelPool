@@ -28,8 +28,8 @@ urlpatterns = [
     path('novel/<int:novel_id>/page/<int:page_id>/selection/<int:selection_id>/', login_required(SelectionView.as_view()), name='selection'),
     path('delete/selection/<int:selection_id>/', selection_delete, name='delete_selection'),
     #Transition
-    path('create/novel/<int:novel_id>/page/<int:page_id>/selection/<int:selection_id>/transition/', transition_edit_or_create, name='create_transition_with_selection'),
-    path('create/novel/<int:novel_id>/page/<int:page_id>/transition/', transition_edit_or_create, name='create_transition'),
+    path('create/novel/<int:novel_id>/page/<int:page_id>/selection/<int:selection_id>/transition/', login_required(TransitionCreateView.as_view()), name='create_transition_with_selection'),
+    path('create/novel/<int:novel_id>/page/<int:page_id>/transition/', login_required(TransitionCreateView.as_view()), name='create_transition'),
     path('edit/novel/<int:novel_id>/page/<int:page_id>/transition/<int:transition_id>/', transition_edit_or_create, name='edit_transition'),
     path('novel/<int:novel_id>/page/<int:page_id>/transition/<int:transition_id>/', login_required(TransitionView.as_view()), name='transition'),
     path('delete/transition/<int:transition_id>/', transition_delete, name='delete_transition'),
